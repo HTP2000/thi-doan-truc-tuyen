@@ -124,6 +124,7 @@
     var startTime, timerInterval;
     var totalSeconds = 20 * 60;
     var tabSwitchCount = 0;
+    var isSubmitted = false;
 
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -156,6 +157,7 @@
       }
 
       startTime = new Date();
+      isSubmitted = false;
 
       document.getElementById('welcome-screen').style.display = 'none';
       document.getElementById('quiz-screen').style.display = 'block';
@@ -188,7 +190,7 @@
       startTimer();
 
       document.addEventListener("visibilitychange", function() {
-        if (document.hidden) {
+        if (document.hidden && !isSubmitted) {
           tabSwitchCount++;
           if (tabSwitchCount >= 2) {
             alert("Cảnh báo: Bạn đã rời khỏi màn hình quá 2 lần. Hệ thống tự động nộp bài!");
@@ -220,6 +222,7 @@
     function submitAnswers(isAutoSubmit = false) {
       if (!isAutoSubmit && !confirm("Bạn có chắc chắn muốn nộp bài không?")) return;
       
+      isSubmitted = true;
       clearInterval(timerInterval);
       document.getElementById('submit-btn').disabled = true;
       document.getElementById('loading').style.display = 'block';
@@ -267,9 +270,10 @@
         document.getElementById('timer-box').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
 
-        // In hoa và in đậm họ tên và đơn vị tại màn hình kết quả
         document.getElementById('result-content').innerHTML = 
-          `Cảm ơn thí sinh: <b style="text-transform: uppercase;">${rawHoTen}</b> (<b style="text-transform: uppercase;">${rawDonVi}</b>)<br><br>` +
+          `Cảm ơn thí sinh:<br>` +
+          `<b style="text-transform: uppercase; font-size: 18px; color: #111;">${rawHoTen}</b><br>` +
+          `<b style="text-transform: uppercase; font-size: 15px; color: #555;">${rawDonVi}</b><br><br>` +
           `Số câu đúng: <b>${correctCount}/${totalQuestions} câu</b><br>` +
           `Điểm số: <b style="color: #d9381e; font-size: 26px;">${score} điểm</b><br>` +
           `Thời gian làm bài: <b>${minutesSpent} phút ${secondsSpent} giây</b><br><br>` +
