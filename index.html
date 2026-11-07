@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thi Trực Tuyến - Nghị Quyết Đại Hội Đoàn XIII</title>
+  <title>Thi Trực Tuyến - Luật Thanh Niên & Nghị Quyết Đoàn XIII</title>
   <style>
     * { box-sizing: border-box; }
     body { 
@@ -83,8 +83,8 @@
 
   <!-- MÀN HÌNH ĐĂNG NHẬP -->
   <div class="container" id="welcome-screen">
-    <h2>Tìm Hiểu Nghị Quyết Đại Hội Đoàn XIII</h2>
-    <div class="subtitle">Cuộc thi trực tuyến (20 câu hỏi / 20 phút - Chống gian lận)</div>
+    <h2>Cuộc Thi Trực Tuyến Pháp Luật & Nghị Quyết</h2>
+    <div class="subtitle">Đề thi gồm 30 câu hỏi (15 câu Luật Thanh niên + 15 câu Nghị Quyết Đoàn XIII) / Thời gian: 20 phút</div>
     <div class="form-group">
       <label>Họ và tên thí sinh:</label>
       <input type="text" id="hoTen" placeholder="Nhập đầy đủ họ và tên..." autocomplete="off">
@@ -96,13 +96,13 @@
     <button class="btn" onclick="startQuiz()">Bắt đầu làm bài</button>
   </div>
 
-  <!-- ĐỒNG HỒ ĐẾM NGƯỢC -->
+  <!-- ĐỒNG HỒ ĐẾM NGƯỢC (20 Phút) -->
   <div id="timer-box" class="timer-box" style="display:none;">⏱️ <span id="time">20:00</span></div>
 
   <!-- MÀN HÌNH LÀM BÀI -->
   <div class="container" id="quiz-screen">
-    <h2>Nội Dung Bài Kiểm Tra</h2>
-    <div class="subtitle">Mỗi thí sinh nhận mã đề ngẫu nhiên. Cảnh báo: Rời màn hình sẽ tự động nộp bài!</div>
+    <h2>Nội Dung Bài Kiểm Tra (30 Câu Hỏi)</h2>
+    <div class="subtitle">Hệ thống tự động chọn ngẫu nhiên đề thi riêng cho bạn. Cảnh báo: Rời màn hình quá 2 lần sẽ tự động nộp bài!</div>
     <div id="questions-container"></div>
     <button class="btn" id="submit-btn" onclick="submitAnswers()">Nộp bài thi</button>
     <div class="loading" id="loading">⏳ Đang gửi bài và đồng bộ kết quả về Google Sheet...</div>
@@ -122,7 +122,7 @@
 
     var shuffledQuestions = [];
     var startTime, timerInterval;
-    var totalSeconds = 20 * 60;
+    var totalSeconds = 20 * 60; // 20 phút làm bài
     var tabSwitchCount = 0;
     var isSubmitted = false;
 
@@ -151,7 +151,7 @@
         return;
       }
 
-      if (typeof rawQuestions === 'undefined' || rawQuestions.length === 0) {
+      if (typeof luatThanhNienQuestions === 'undefined' || typeof nghiQuyetDoanQuestions === 'undefined') {
         alert("Lỗi: Không tải được danh sách câu hỏi từ tệp questions.js!");
         return;
       }
@@ -163,7 +163,19 @@
       document.getElementById('quiz-screen').style.display = 'block';
       document.getElementById('timer-box').style.display = 'block';
 
-      shuffledQuestions = JSON.parse(JSON.stringify(rawQuestions));
+      // 1. Sao chép và xáo trộn ngẫu nhiên từng bộ nguồn riêng biệt
+      let poolLuat = JSON.parse(JSON.stringify(luatThanhNienQuestions));
+      let poolNghiQuyet = JSON.parse(JSON.stringify(nghiQuyetDoanQuestions));
+      
+      shuffleArray(poolLuat);
+      shuffleArray(poolNghiQuyet);
+
+      // 2. Bốc ngẫu nhiên 15 câu từ file Luật Thanh niên và 15 câu từ file Nghị Quyết Đoàn XIII
+      let selectedLuat = poolLuat.slice(0, 15);
+      let selectedNghiQuyet = poolNghiQuyet.slice(0, 15);
+
+      // 3. Kết hợp lại và xáo trộn tổng thể lần nữa để trộn lẫn các câu hỏi ngẫu nhiên hoàn toàn
+      shuffledQuestions = selectedLuat.concat(selectedNghiQuyet);
       shuffleArray(shuffledQuestions);
 
       let containerHtml = "";
@@ -230,7 +242,7 @@
       var submitTime = new Date();
 
       var correctCount = 0;
-      var totalQuestions = shuffledQuestions.length;
+      var totalQuestions = shuffledQuestions.length; // Tổng 30 câu
 
       for (let i = 0; i < totalQuestions; i++) {
         let radios = document.getElementsByName(`q_${i}`);
@@ -248,7 +260,7 @@
       var payload = {
         hoTen: rawHoTen,
         donVi: rawDonVi,
-        correctCount: correctCount,
+        correctCount: correctCount, // Sẽ lưu số câu đúng / 30
         startTime: startTime.toISOString(),
         submitTime: submitTime.toISOString()
       };
@@ -260,7 +272,7 @@
         body: JSON.stringify(payload)
       })
       .then(function() {
-        var score = ((correctCount / totalQuestions) * 10).toFixed(2);
+        var score = ((correctCount / totalQuestions) * 10).toFixed(2); // Thang điểm 10 quy đổi từ 30 câu
         var timeSpentSeconds = Math.floor((submitTime - startTime) / 1000);
         var minutesSpent = Math.floor(timeSpentSeconds / 60);
         var secondsSpent = timeSpentSeconds % 60;
