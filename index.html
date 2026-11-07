@@ -96,7 +96,7 @@
     <button class="btn" onclick="startQuiz()">Bắt đầu làm bài</button>
   </div>
 
-  <!-- ĐỒNG HỒ ĐẾM NGƯỢC (20 Phút) -->
+  <!-- ĐỒNG HỒ ĐẾM NGƯỢC -->
   <div id="timer-box" class="timer-box" style="display:none;">⏱️ <span id="time">20:00</span></div>
 
   <!-- MÀN HÌNH LÀM BÀI -->
@@ -163,18 +163,16 @@
       document.getElementById('quiz-screen').style.display = 'block';
       document.getElementById('timer-box').style.display = 'block';
 
-      // 1. Sao chép và xáo trộn ngẫu nhiên từng bộ nguồn riêng biệt
       let poolLuat = JSON.parse(JSON.stringify(luatThanhNienQuestions));
       let poolNghiQuyet = JSON.parse(JSON.stringify(nghiQuyetDoanQuestions));
       
       shuffleArray(poolLuat);
       shuffleArray(poolNghiQuyet);
 
-      // 2. Bốc ngẫu nhiên 15 câu từ file Luật Thanh niên và 15 câu từ file Nghị Quyết Đoàn XIII
+      // Bốc ngẫu nhiên 15 câu Luật Thanh niên và 15 câu Nghị Quyết
       let selectedLuat = poolLuat.slice(0, 15);
       let selectedNghiQuyet = poolNghiQuyet.slice(0, 15);
 
-      // 3. Kết hợp lại và xáo trộn tổng thể lần nữa để trộn lẫn các câu hỏi ngẫu nhiên hoàn toàn
       shuffledQuestions = selectedLuat.concat(selectedNghiQuyet);
       shuffleArray(shuffledQuestions);
 
@@ -242,8 +240,9 @@
       var submitTime = new Date();
 
       var correctCount = 0;
-      var totalQuestions = shuffledQuestions.length; // Tổng 30 câu
+      var totalQuestions = shuffledQuestions.length;
 
+      // Tính toán số câu đúng trực tiếp trên giao diện
       for (let i = 0; i < totalQuestions; i++) {
         let radios = document.getElementsByName(`q_${i}`);
         for (let r = 0; r < radios.length; r++) {
@@ -256,11 +255,15 @@
 
       var rawHoTen = document.getElementById('hoTen').value;
       var rawDonVi = document.getElementById('donVi').value;
+      
+      // Đóng gói sẵn định dạng x/30 để gửi thẳng về Google Sheet
+      var scoreText = correctCount + "/" + totalQuestions;
 
       var payload = {
         hoTen: rawHoTen,
         donVi: rawDonVi,
-        correctCount: correctCount, // Sẽ lưu số câu đúng / 30
+        correctCount: correctCount,
+        scoreText: scoreText, // Gửi thẳng chuỗi định dạng qua đây
         startTime: startTime.toISOString(),
         submitTime: submitTime.toISOString()
       };
@@ -272,7 +275,7 @@
         body: JSON.stringify(payload)
       })
       .then(function() {
-        var score = ((correctCount / totalQuestions) * 10).toFixed(2); // Thang điểm 10 quy đổi từ 30 câu
+        var score = ((correctCount / totalQuestions) * 10).toFixed(2);
         var timeSpentSeconds = Math.floor((submitTime - startTime) / 1000);
         var minutesSpent = Math.floor(timeSpentSeconds / 60);
         var secondsSpent = timeSpentSeconds % 60;
@@ -286,7 +289,7 @@
           `Cảm ơn thí sinh:<br>` +
           `<b style="text-transform: uppercase; font-size: 18px; color: #111;">${rawHoTen}</b><br>` +
           `<b style="text-transform: uppercase; font-size: 15px; color: #555;">${rawDonVi}</b><br><br>` +
-          `Số câu đúng: <b>${correctCount}/${totalQuestions} câu</b><br>` +
+          `Số câu đúng: <b>${scoreText} câu</b><br>` +
           `Điểm số: <b style="color: #d9381e; font-size: 26px;">${score} điểm</b><br>` +
           `Thời gian làm bài: <b>${minutesSpent} phút ${secondsSpent} giây</b><br><br>` +
           `<i>Kết quả đã được cập nhật thành công lên hệ thống xếp hạng!</i>`;
