@@ -25,10 +25,8 @@
       border-radius: 12px; 
       box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
     }
-    
     h2 { text-align: center; color: #d9381e; margin-bottom: 5px; text-transform: uppercase; font-size: 20px; }
     .subtitle { text-align: center; color: #555; margin-bottom: 20px; font-size: 13px; font-weight: 500; }
-    
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 6px; font-weight: 600; color: #222; font-size: 14px; }
     input[type="text"] { 
@@ -40,7 +38,6 @@
       user-select: text; 
       -webkit-user-select: text; 
     }
-    
     .btn { 
       background-color: #d9381e; 
       color: white; 
@@ -56,9 +53,7 @@
     }
     .btn:hover { background-color: #b52c14; }
     .btn:disabled { background-color: #ccc; cursor: not-allowed; }
-    
     #quiz-screen, #result-screen { display: none; }
-    
     .timer-box { 
       position: fixed; 
       top: 15px; 
@@ -72,13 +67,11 @@
       z-index: 1000; 
       font-size: 14px; 
     }
-    
     .question-card { background: #f9f9f9; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
     .question-title { font-weight: 600; margin-bottom: 10px; font-size: 15px; color: #111; }
     .options label { display: block; font-weight: normal; margin-bottom: 8px; cursor: pointer; padding: 8px; border-radius: 4px; font-size: 14px; transition: background 0.2s; }
     .options label:hover { background: #e9ecef; }
     .loading { text-align: center; font-style: italic; color: #d9381e; display: none; margin-top: 15px; font-weight: bold; }
-
     @media (max-width: 480px) {
       body { padding: 8px; }
       .container { padding: 15px; margin: 10px auto; }
@@ -92,17 +85,14 @@
   <div class="container" id="welcome-screen">
     <h2>Tìm Hiểu Nghị Quyết Đại Hội Đoàn XIII</h2>
     <div class="subtitle">Cuộc thi trực tuyến (20 câu hỏi / 20 phút - Chống gian lận)</div>
-    
     <div class="form-group">
       <label>Họ và tên thí sinh:</label>
       <input type="text" id="hoTen" placeholder="Nhập đầy đủ họ và tên..." autocomplete="off">
     </div>
-    
     <div class="form-group">
       <label>Đơn vị (Chi đoàn / Trường / TDP):</label>
       <input type="text" id="donVi" placeholder="Nhập tên đơn vị..." autocomplete="off">
     </div>
-    
     <button class="btn" onclick="startQuiz()">Bắt đầu làm bài</button>
   </div>
 
@@ -113,9 +103,7 @@
   <div class="container" id="quiz-screen">
     <h2>Nội Dung Bài Kiểm Tra</h2>
     <div class="subtitle">Mỗi thí sinh nhận mã đề ngẫu nhiên. Cảnh báo: Rời màn hình sẽ tự động nộp bài!</div>
-    
     <div id="questions-container"></div>
-
     <button class="btn" id="submit-btn" onclick="submitAnswers()">Nộp bài thi</button>
     <div class="loading" id="loading">⏳ Đang gửi bài và đồng bộ kết quả về Google Sheet...</div>
   </div>
@@ -127,16 +115,15 @@
     <button class="btn" onclick="location.reload()">Quay về trang chủ</button>
   </div>
 
-  <!-- GỌI TỆP CÂU HỎI -->
+  <!-- GỌI TỆP CÂU HỎI (PHẢI ĐẶT TRƯỚC SCRIPT LOGIC) -->
   <script src="questions.js"></script>
 
   <script>
-    // DÁN ĐƯỜNG LINK GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO GIỮA DẤU NGOẶC KÉP DƯỚI ĐÂY
     var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXOmMFhK-GcBus6VhEfuASbEjflQQ8VQW9VCWj0O0tjfIOav84mIpSSel1bhvHhr25Gw/exec";
 
     var shuffledQuestions = [];
     var startTime, timerInterval;
-    var totalSeconds = 20 * 60; // 20 phút
+    var totalSeconds = 20 * 60;
     var tabSwitchCount = 0;
 
     function shuffleArray(array) {
@@ -147,7 +134,6 @@
       return array;
     }
 
-    // Chống phím tắt copy, F12
     document.addEventListener('keydown', function(e) {
       if (e.key === 'F12' || (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 's' || e.key === 'p' || e.key === 'a'))) {
         e.preventDefault();
@@ -165,11 +151,16 @@
         return;
       }
 
+      // Kiểm tra an toàn xem file questions.js đã load thành công chưa
+      if (typeof rawQuestions === 'undefined' || rawQuestions.length === 0) {
+        alert("Lỗi: Không tải được danh sách câu hỏi từ tệp questions.js! Vui lòng tải lại trang.");
+        return;
+      }
+
       document.getElementById('welcome-screen').style.display = 'none';
       document.getElementById('quiz-screen').style.display = 'block';
       document.getElementById('timer-box').style.display = 'block';
 
-      // Xáo trộn thứ tự câu hỏi và thứ tự đáp án A, B, C, D
       shuffledQuestions = JSON.parse(JSON.stringify(rawQuestions));
       shuffleArray(shuffledQuestions);
 
@@ -198,7 +189,6 @@
       startTime = new Date();
       startTimer();
 
-      // Chống gian lận: Cảnh báo rời màn hình
       document.addEventListener("visibilitychange", function() {
         if (document.hidden) {
           tabSwitchCount++;
@@ -237,7 +227,7 @@
       document.getElementById('loading').style.display = 'block';
 
       var endTime = new Date();
-      var timeSpent = Math.floor((endTime - startTime) / 1000); // Thời gian làm bài (giây)
+      var timeSpent = Math.floor((endTime - startTime) / 1000);
 
       var correctCount = 0;
       var totalQuestions = shuffledQuestions.length;
@@ -259,7 +249,6 @@
         timeSpent: timeSpent
       };
 
-      // Gửi dữ liệu về Google Sheet để chấm điểm & xếp hạng
       fetch(WEB_APP_URL, {
         method: 'POST',
         mode: 'no-cors',
