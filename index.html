@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thi Trực Tuyến - Nghị Quyết Đại Hội Đoàn XIII</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1557683316-973673baf926') no-repeat center center fixed; 
+      background-size: cover;
+      margin: 0; 
+      padding: 15px; 
+      color: #333; 
+      -webkit-user-select: none; 
+      user-select: none;         
+    }
+    .container { 
+      max-width: 700px; 
+      width: 100%;
+      margin: 20px auto; 
+      background: rgba(255, 255, 255, 0.98); 
+      padding: 25px; 
+      border-radius: 12px; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+    }
+    
+    h2 { text-align: center; color: #d9381e; margin-bottom: 5px; text-transform: uppercase; font-size: 20px; }
+    .subtitle { text-align: center; color: #555; margin-bottom: 20px; font-size: 13px; font-weight: 500; }
+    
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; color: #222; font-size: 14px; }
+    input[type="text"] { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid #ccc; 
+      border-radius: 6px; 
+      font-size: 16px; 
+      user-select: text; 
+      -webkit-user-select: text; 
+    }
+    
+    .btn { 
+      background-color: #d9381e; 
+      color: white; 
+      padding: 12px 20px; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-size: 16px; 
+      width: 100%; 
+      font-weight: bold; 
+      transition: background 0.3s; 
+      text-transform: uppercase; 
+    }
+    .btn:hover { background-color: #b52c14; }
+    .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    
+    #quiz-screen, #result-screen { display: none; }
+    
+    .timer-box { 
+      position: fixed; 
+      top: 15px; 
+      right: 15px; 
+      background: #d9381e; 
+      color: white; 
+      padding: 8px 15px; 
+      border-radius: 20px; 
+      font-weight: bold; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+      z-index: 1000; 
+      font-size: 14px; 
+    }
+    
+    .question-card { background: #f9f9f9; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .question-title { font-weight: 600; margin-bottom: 10px; font-size: 15px; color: #111; }
+    .options label { display: block; font-weight: normal; margin-bottom: 8px; cursor: pointer; padding: 8px; border-radius: 4px; font-size: 14px; transition: background 0.2s; }
+    .options label:hover { background: #e9ecef; }
+    .loading { text-align: center; font-style: italic; color: #d9381e; display: none; margin-top: 15px; font-weight: bold; }
+
+    @media (max-width: 480px) {
+      body { padding: 8px; }
+      .container { padding: 15px; margin: 10px auto; }
+      h2 { font-size: 18px; }
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <!-- MÀN HÌNH ĐĂNG NHẬP -->
+  <div class="container" id="welcome-screen">
+    <h2>Tìm Hiểu Nghị Quyết Đại Hội Đoàn XIII</h2>
+    <div class="subtitle">Cuộc thi trực tuyến (20 câu hỏi / 20 phút - Chống gian lận)</div>
+    
+    <div class="form-group">
+      <label>Họ và tên thí sinh:</label>
+      <input type="text" id="hoTen" placeholder="Nhập đầy đủ họ và tên..." autocomplete="off">
+    </div>
+    
+    <div class="form-group">
+      <label>Đơn vị (Chi đoàn / Trường / TDP):</label>
+      <input type="text" id="donVi" placeholder="Nhập tên đơn vị..." autocomplete="off">
+    </div>
+    
+    <button class="btn" onclick="startQuiz()">Bắt đầu làm bài</button>
+  </div>
+
+  <!-- ĐỒNG HỒ ĐẾM NGƯỢC -->
+  <div id="timer-box" class="timer-box" style="display:none;">⏱️ <span id="time">20:00</span></div>
+
+  <!-- MÀN HÌNH LÀM BÀI -->
+  <div class="container" id="quiz-screen">
+    <h2>Nội Dung Bài Kiểm Tra</h2>
+    <div class="subtitle">Mỗi thí sinh nhận mã đề ngẫu nhiên. Cảnh báo: Rời màn hình sẽ tự động nộp bài!</div>
+    
+    <div id="questions-container"></div>
+
+    <button class="btn" id="submit-btn" onclick="submitAnswers()">Nộp bài thi</button>
+    <div class="loading" id="loading">⏳ Đang gửi bài và đồng bộ kết quả về Google Sheet...</div>
+  </div>
+
+  <!-- MÀN HÌNH KẾT QUẢ -->
+  <div class="container" id="result-screen">
+    <h2>Kết Quả Bài Làm</h2>
+    <div id="result-content" style="text-align: center; font-size: 16px; margin: 20px 0;"></div>
+    <button class="btn" onclick="location.reload()">Quay về trang chủ</button>
+  </div>
+
+  <!-- GỌI TỆP CÂU HỎI -->
+  <script src="questions.js"></script>
+
+  <script>
+    // DÁN ĐƯỜNG LINK GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO GIỮA DẤU NGOẶC KÉP DƯỚI ĐÂY
+    var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXOmMFhK-GcBus6VhEfuASbEjflQQ8VQW9VCWj0O0tjfIOav84mIpSSel1bhvHhr25Gw/exec";
+
+    var shuffledQuestions = [];
+    var startTime, timerInterval;
+    var totalSeconds = 20 * 60; // 20 phút
+    var tabSwitchCount = 0;
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // Chống phím tắt copy, F12
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'F12' || (e.ctrlKey && (e.key === 'c' || e.key === 'u' || e.key === 's' || e.key === 'p' || e.key === 'a'))) {
+        e.preventDefault();
+        alert("Hành động này bị vô hiệu hóa!");
+        return false;
+      }
+    });
+
+    function startQuiz() {
+      var hoTen = document.getElementById('hoTen').value.trim();
+      var donVi = document.getElementById('donVi').value.trim();
+      
+      if (!hoTen || !donVi) {
+        alert('Vui lòng nhập đầy đủ Họ tên và Đơn vị!');
+        return;
+      }
+
+      document.getElementById('welcome-screen').style.display = 'none';
+      document.getElementById('quiz-screen').style.display = 'block';
+      document.getElementById('timer-box').style.display = 'block';
+
+      // Xáo trộn thứ tự câu hỏi và thứ tự đáp án A, B, C, D
+      shuffledQuestions = JSON.parse(JSON.stringify(rawQuestions));
+      shuffleArray(shuffledQuestions);
+
+      let containerHtml = "";
+      shuffledQuestions.forEach((item, index) => {
+        let shuffledOptions = [...item.options];
+        shuffleArray(shuffledOptions);
+
+        containerHtml += `<div class="question-card">
+          <div class="question-title">Câu ${index + 1}: ${item.q.substring(item.q.indexOf(':') + 1).trim()}</div>
+          <div class="options">`;
+        
+        shuffledOptions.forEach((opt, optIndex) => {
+          let optionLetter = String.fromCharCode(65 + optIndex);
+          containerHtml += `<label>
+            <input type="radio" name="q_${index}" value="${opt.correct ? 'CORRECT' : 'WRONG'}"> 
+            <b>${optionLetter}.</b> ${opt.text}
+          </label>`;
+        });
+
+        containerHtml += `</div></div>`;
+      });
+
+      document.getElementById('questions-container').innerHTML = containerHtml;
+
+      startTime = new Date();
+      startTimer();
+
+      // Chống gian lận: Cảnh báo rời màn hình
+      document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+          tabSwitchCount++;
+          if (tabSwitchCount >= 2) {
+            alert("Cảnh báo: Bạn đã rời khỏi màn hình quá 2 lần. Hệ thống tự động nộp bài!");
+            submitAnswers(true);
+          } else {
+            alert("Cảnh báo: Không rời khỏi màn hình trong khi làm bài!");
+          }
+        }
+      });
+    }
+
+    function startTimer() {
+      var timerElement = document.getElementById('time');
+      timerInterval = setInterval(function() {
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        
+        timerElement.textContent = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+        
+        if (totalSeconds <= 0) {
+          clearInterval(timerInterval);
+          alert("Hết thời gian 20 phút làm bài!");
+          submitAnswers(true);
+        }
+        totalSeconds--;
+      }, 1000);
+    }
+
+    function submitAnswers(isAutoSubmit = false) {
+      if (!isAutoSubmit && !confirm("Bạn có chắc chắn muốn nộp bài không?")) return;
+      
+      clearInterval(timerInterval);
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+
+      var endTime = new Date();
+      var timeSpent = Math.floor((endTime - startTime) / 1000); // Thời gian làm bài (giây)
+
+      var correctCount = 0;
+      var totalQuestions = shuffledQuestions.length;
+
+      for (let i = 0; i < totalQuestions; i++) {
+        let radios = document.getElementsByName(`q_${i}`);
+        for (let r = 0; r < radios.length; r++) {
+          if (radios[r].checked && radios[r].value === 'CORRECT') {
+            correctCount++;
+            break;
+          }
+        }
+      }
+
+      var payload = {
+        hoTen: document.getElementById('hoTen').value,
+        donVi: document.getElementById('donVi').value,
+        correctCount: correctCount,
+        timeSpent: timeSpent
+      };
+
+      // Gửi dữ liệu về Google Sheet để chấm điểm & xếp hạng
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function() {
+        var score = ((correctCount / totalQuestions) * 10).toFixed(2);
+        var minutesSpent = Math.floor(timeSpent / 60);
+        var secondsSpent = timeSpent % 60;
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('timer-box').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+
+        document.getElementById('result-content').innerHTML = 
+          `Cảm ơn thí sinh: <b>${payload.hoTen}</b> (${payload.donVi})<br><br>` +
+          `Số câu đúng: <b>${correctCount}/${totalQuestions} câu</b><br>` +
+          `Điểm số: <b style="color: #d9381e; font-size: 26px;">${score} điểm</b><br>` +
+          `Thời gian hoàn thành: <b>${minutesSpent} phút ${secondsSpent} giây</b><br><br>` +
+          `<i>Kết quả đã được cập nhật lên hệ thống xếp hạng!</i>`;
+      })
+      .catch(function(err) {
+        alert("Lỗi kết nối: " + err);
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('loading').style.display = 'none';
+      });
+    }
+  </script>
+</body>
+</html>
