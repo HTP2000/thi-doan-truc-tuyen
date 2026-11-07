@@ -115,11 +115,10 @@
     <button class="btn" onclick="location.reload()">Quay về trang chủ</button>
   </div>
 
-  <!-- GỌI TỆP CÂU HỎI (PHẢI ĐẶT TRƯỚC SCRIPT LOGIC) -->
   <script src="questions.js"></script>
 
   <script>
-    var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXOmMFhK-GcBus6VhEfuASbEjflQQ8VQW9VCWj0O0tjfIOav84mIpSSel1bhvHhr25Gw/exec";
+    var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAF-u6EqTpQCdTdxs4fc_ei2o6Wfr_4B5axQe02F7Ro4-crEnfg2pNebrw4rO7EAe_hQ/exec";
 
     var shuffledQuestions = [];
     var startTime, timerInterval;
@@ -151,11 +150,13 @@
         return;
       }
 
-      // Kiểm tra an toàn xem file questions.js đã load thành công chưa
       if (typeof rawQuestions === 'undefined' || rawQuestions.length === 0) {
-        alert("Lỗi: Không tải được danh sách câu hỏi từ tệp questions.js! Vui lòng tải lại trang.");
+        alert("Lỗi: Không tải được danh sách câu hỏi từ tệp questions.js!");
         return;
       }
+
+      // Ghi nhận chính xác thời gian bắt đầu làm bài
+      startTime = new Date();
 
       document.getElementById('welcome-screen').style.display = 'none';
       document.getElementById('quiz-screen').style.display = 'block';
@@ -185,8 +186,6 @@
       });
 
       document.getElementById('questions-container').innerHTML = containerHtml;
-
-      startTime = new Date();
       startTimer();
 
       document.addEventListener("visibilitychange", function() {
@@ -226,8 +225,8 @@
       document.getElementById('submit-btn').disabled = true;
       document.getElementById('loading').style.display = 'block';
 
-      var endTime = new Date();
-      var timeSpent = Math.floor((endTime - startTime) / 1000);
+      // Ghi nhận thời gian kết thúc (nộp bài)
+      var submitTime = new Date();
 
       var correctCount = 0;
       var totalQuestions = shuffledQuestions.length;
@@ -246,7 +245,8 @@
         hoTen: document.getElementById('hoTen').value,
         donVi: document.getElementById('donVi').value,
         correctCount: correctCount,
-        timeSpent: timeSpent
+        startTime: startTime.toISOString(),
+        submitTime: submitTime.toISOString()
       };
 
       fetch(WEB_APP_URL, {
@@ -257,8 +257,9 @@
       })
       .then(function() {
         var score = ((correctCount / totalQuestions) * 10).toFixed(2);
-        var minutesSpent = Math.floor(timeSpent / 60);
-        var secondsSpent = timeSpent % 60;
+        var timeSpentSeconds = Math.floor((submitTime - startTime) / 1000);
+        var minutesSpent = Math.floor(timeSpentSeconds / 60);
+        var secondsSpent = timeSpentSeconds % 60;
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('quiz-screen').style.display = 'none';
@@ -269,8 +270,8 @@
           `Cảm ơn thí sinh: <b>${payload.hoTen}</b> (${payload.donVi})<br><br>` +
           `Số câu đúng: <b>${correctCount}/${totalQuestions} câu</b><br>` +
           `Điểm số: <b style="color: #d9381e; font-size: 26px;">${score} điểm</b><br>` +
-          `Thời gian hoàn thành: <b>${minutesSpent} phút ${secondsSpent} giây</b><br><br>` +
-          `<i>Kết quả đã được cập nhật lên hệ thống xếp hạng!</i>`;
+          `Thời gian làm bài: <b>${minutesSpent} phút ${secondsSpent} giây</b><br><br>` +
+          `<i>Kết quả đã được cập nhật thành công lên hệ thống xếp hạng!</i>`;
       })
       .catch(function(err) {
         alert("Lỗi kết nối: " + err);
