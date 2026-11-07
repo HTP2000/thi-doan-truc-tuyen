@@ -118,7 +118,7 @@
   <script src="questions.js"></script>
 
   <script>
-    var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAF-u6EqTpQCdTdxs4fc_ei2o6Wfr_4B5axQe02F7Ro4-crEnfg2pNebrw4rO7EAe_hQ/exec";
+    var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxXOmMFhK-GcBus6VhEfuASbEjflQQ8VQW9VCWj0O0tjfIOav84mIpSSel1bhvHhr25Gw/exec";
 
     var shuffledQuestions = [];
     var startTime, timerInterval;
@@ -155,7 +155,6 @@
         return;
       }
 
-      // Ghi nhận chính xác thời gian bắt đầu làm bài
       startTime = new Date();
 
       document.getElementById('welcome-screen').style.display = 'none';
@@ -225,7 +224,6 @@
       document.getElementById('submit-btn').disabled = true;
       document.getElementById('loading').style.display = 'block';
 
-      // Ghi nhận thời gian kết thúc (nộp bài)
       var submitTime = new Date();
 
       var correctCount = 0;
@@ -241,9 +239,12 @@
         }
       }
 
+      var rawHoTen = document.getElementById('hoTen').value;
+      var rawDonVi = document.getElementById('donVi').value;
+
       var payload = {
-        hoTen: document.getElementById('hoTen').value,
-        donVi: document.getElementById('donVi').value,
+        hoTen: rawHoTen,
+        donVi: rawDonVi,
         correctCount: correctCount,
         startTime: startTime.toISOString(),
         submitTime: submitTime.toISOString()
@@ -266,8 +267,9 @@
         document.getElementById('timer-box').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
 
+        // In hoa và in đậm họ tên và đơn vị tại màn hình kết quả
         document.getElementById('result-content').innerHTML = 
-          `Cảm ơn thí sinh: <b>${payload.hoTen}</b> (${payload.donVi})<br><br>` +
+          `Cảm ơn thí sinh: <b style="text-transform: uppercase;">${rawHoTen}</b> (<b style="text-transform: uppercase;">${rawDonVi}</b>)<br><br>` +
           `Số câu đúng: <b>${correctCount}/${totalQuestions} câu</b><br>` +
           `Điểm số: <b style="color: #d9381e; font-size: 26px;">${score} điểm</b><br>` +
           `Thời gian làm bài: <b>${minutesSpent} phút ${secondsSpent} giây</b><br><br>` +
